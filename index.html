@@ -1185,7 +1185,8 @@ async function guardarDatosUsuario(campos) {
     if (!TELEGRAM_ID) return false;
     try {
         const docRef = db.collection('usuarios').doc(TELEGRAM_ID);
-        await docRef.update(campos);
+        // Usar set con merge:true para crear o actualizar
+        await docRef.set(campos, { merge: true });
         Object.assign(usuarioData, campos);
         return true;
     } catch (error) {
@@ -1193,7 +1194,6 @@ async function guardarDatosUsuario(campos) {
         return false;
     }
 }
-
 // =============================================
 // ===== SISTEMA DE LOGROS Y PUNTOS =====
 // =============================================
