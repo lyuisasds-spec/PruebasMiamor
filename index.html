@@ -762,7 +762,6 @@
       color: var(--rosa, #f26b9e);
     }
 
-    /* Botón cambiar usuario */
     .cambiar-usuario-btn {
       position: fixed;
       bottom: 1.5rem;
@@ -783,6 +782,97 @@
     .cambiar-usuario-btn:hover {
       background: var(--violeta-medio);
       transform: scale(1.05);
+    }
+
+    /* ===== TIENDA ===== */
+    .tienda-section {
+      padding: 5rem 1.5rem 6rem;
+      background: linear-gradient(180deg, var(--violeta-oscuro), var(--violeta-profundo));
+    }
+    .tienda-grid {
+      max-width: 1000px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.8rem;
+    }
+    @media (max-width: 800px) {
+      .tienda-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 520px) {
+      .tienda-grid { grid-template-columns: 1fr; max-width: 340px; margin: 0 auto; }
+    }
+    .tienda-card {
+      background: var(--crema);
+      border-radius: 18px;
+      padding: 1.5rem 1.2rem;
+      text-align: center;
+      box-shadow: var(--sombra-suave);
+      transition: transform 0.35s ease, box-shadow 0.35s ease;
+      border: 2px solid transparent;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .tienda-card:hover {
+      transform: translateY(-8px) scale(1.02);
+      box-shadow: var(--sombra-fuerte);
+    }
+    .tienda-card .emoji {
+      font-size: 3rem;
+      line-height: 1;
+    }
+    .tienda-card .nombre {
+      font-family: 'Caveat', cursive;
+      font-size: 1.5rem;
+      color: var(--violeta-profundo);
+      font-weight: 700;
+    }
+    .tienda-card .descripcion {
+      font-size: 0.85rem;
+      color: var(--violeta-medio);
+      opacity: 0.8;
+      min-height: 2.5rem;
+    }
+    .tienda-card .precio {
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--rosa);
+      background: rgba(242, 107, 158, 0.1);
+      padding: 0.2rem 1rem;
+      border-radius: 999px;
+    }
+    .tienda-card .btn-comprar {
+      font-family: 'Quicksand', sans-serif;
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--crema);
+      background: linear-gradient(130deg, var(--violeta-medio), var(--rosa));
+      border: none;
+      padding: 0.6rem 2rem;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      width: 100%;
+      max-width: 200px;
+    }
+    .tienda-card .btn-comprar:hover:not(:disabled) {
+      transform: translateY(-3px) scale(1.03);
+      box-shadow: 0 8px 25px rgba(242, 107, 158, 0.3);
+    }
+    .tienda-card .btn-comprar:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+    .tienda-card.sin-stock {
+      opacity: 0.5;
+      border-color: #ccc;
+    }
+    .tienda-card.sin-stock .btn-comprar {
+      background: #888;
+      cursor: not-allowed;
     }
   </style>
 </head>
@@ -1025,6 +1115,21 @@
   <p class="ruleta-ayuda reveal">Amor aqui podras obtener puntos/xp para subir niveles y girar la ruleta cada premio diario sera diferente puede ser algo que te guste como algo que no... recuerda que es suerte(Se manda lo que te toco al bot asi que ojo) 💗</p>
 </section>
 
+<!-- ===== TIENDA ===== -->
+<section class="tienda-section" id="tienda">
+  <div class="seccion-titulo reveal">
+    <span class="eyebrow script">gasta tus puntos</span>
+    <h2>🛍️ Tienda de <span>premios</span></h2>
+    <p style="color: var(--lavanda); margin-top: 0.5rem; font-size: 0.95rem;">Canjea tus puntos por premios especiales 💗</p>
+  </div>
+
+  <div class="tienda-grid" id="tienda-grid">
+    <!-- Los productos se cargan desde Firebase -->
+  </div>
+
+  <div id="tienda-mensaje" style="text-align:center; margin-top: 1.5rem; font-family:'Caveat', cursive; font-size:1.3rem; color:var(--dorado); min-height:2rem;"></div>
+</section>
+
 <!-- CARTA -->
 <section class="carta-wrap">
   <article class="carta reveal">
@@ -1073,7 +1178,6 @@ const firebaseConfig = {
   appId: "1:1056630640385:web:dfd9da8a1af3d713529500"
 };
 
-// Inicializar Firebase
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
@@ -1101,10 +1205,6 @@ let usuarioData = {
 };
 
 let datosCargados = false;
-
-// =============================================
-// ===== FUNCIONES DE USUARIO =====
-// =============================================
 
 function obtenerTelegramIdGuardado() {
     return localStorage.getItem(LS_TELEGRAM_ID);
@@ -1154,7 +1254,6 @@ async function cargarDatosUsuario() {
             console.log('✅ Datos cargados desde Firebase para:', TELEGRAM_ID);
             return true;
         } else {
-            // Crear usuario nuevo
             const nuevoUsuario = {
                 telegram_id: TELEGRAM_ID,
                 nombre: 'Bebita',
@@ -1194,6 +1293,7 @@ async function guardarDatosUsuario(campos) {
         return false;
     }
 }
+
 // =============================================
 // ===== SISTEMA DE LOGROS Y PUNTOS =====
 // =============================================
@@ -1226,7 +1326,6 @@ function xpParaSiguiente(nivel) {
     return NIVELES[nivel + 1];
 }
 
-// Elementos del HUD
 const hudPuntos = document.getElementById('hud-puntos');
 const hudNivel = document.getElementById('hud-nivel');
 const elPuntosRuleta = document.getElementById('ruleta-puntos-actual');
@@ -1278,13 +1377,11 @@ async function ganarPuntos(pts, xpGanado, logroId) {
     if (logroId) {
         const hoy = new Date().toISOString().split('T')[0];
         
-        // Verificar si ya se obtuvo hoy
         if (usuarioData.logros && usuarioData.logros[logroId] === hoy) {
             mostrarToast('Ya obtuviste este logro hoy 💗');
             return;
         }
         
-        // Guardar el logro
         const nuevosLogros = { ...usuarioData.logros, [logroId]: hoy };
         const nuevosPuntos = (usuarioData.puntos || 0) + pts;
         const nuevoXp = (usuarioData.xp || 0) + xpGanado;
@@ -1308,7 +1405,6 @@ async function ganarPuntos(pts, xpGanado, logroId) {
         }
         renderizarMapa();
     } else {
-        // Acciones que no son logros (ej: botón de amor)
         const nuevosPuntos = (usuarioData.puntos || 0) + pts;
         const nuevoXp = (usuarioData.xp || 0) + xpGanado;
         const nuevoNivel = nivelActual(nuevoXp);
@@ -1327,7 +1423,6 @@ async function ganarPuntos(pts, xpGanado, logroId) {
 
 window.amorGanarPuntos = ganarPuntos;
 
-// ---- Mapa de niveles ----
 function renderizarMapa() {
     const cont = document.getElementById('mapa-camino');
     if (!cont) return;
@@ -1361,7 +1456,6 @@ function cerrarMapaNiveles() {
 document.getElementById('mapa-cerrar').addEventListener('click', cerrarMapaNiveles);
 document.getElementById('hud-flotante').addEventListener('click', abrirMapaNiveles);
 
-// ---- Celebración ----
 function mostrarCelebracion(nivel, textoPremio) {
     const overlay = document.getElementById('celebracion-overlay');
     const elNivel = document.getElementById('celebracion-nivel-texto');
@@ -1377,13 +1471,11 @@ document.getElementById('celebracion-cerrar').addEventListener('click', function
     renderizarMapa();
 });
 
-// ---- Racha diaria ----
 async function verificarRacha() {
     const hoy = new Date().toISOString().split('T')[0];
     const ultimaVisita = localStorage.getItem('amor_ultima_visita');
     if (ultimaVisita !== hoy) {
         localStorage.setItem('amor_ultima_visita', hoy);
-        // Verificar si ya se obtuvo el logro hoy
         if (!usuarioData.logros || usuarioData.logros['racha-' + hoy] !== hoy) {
             await ganarPuntos(5, 10, 'racha-' + hoy);
         }
@@ -1484,7 +1576,6 @@ if (btnGirar && rueda && resultadoEl) {
         girando = true;
         btnGirar.disabled = true;
 
-        // Restar puntos y giros
         const nuevosPuntos = puntos - COSTO_GIRO;
         const nuevosGiros = giros - 1;
         await guardarDatosUsuario({
@@ -1493,7 +1584,6 @@ if (btnGirar && rueda && resultadoEl) {
         });
         actualizarHUD();
 
-        // Animación de la ruleta
         const segmentos = PREMIOS_RULETA.length;
         const indiceGanador = Math.floor(Math.random() * segmentos);
         const gradosPorSegmento = 360 / segmentos;
@@ -1513,7 +1603,6 @@ if (btnGirar && rueda && resultadoEl) {
             resultadoEl.textContent = '🎉 ' + premio;
             resultadoEl.classList.add('mostrar');
             
-            // Guardar premio en Firebase
             const premiosLista = usuarioData.premios || [];
             premiosLista.push({
                 premio: premio,
@@ -1522,7 +1611,6 @@ if (btnGirar && rueda && resultadoEl) {
             });
             await guardarDatosUsuario({ premios: premiosLista });
             
-            // Guardar en el bot (webhook)
             guardarEnBot(TELEGRAM_ID, 'Bebita', premio, 'ruleta');
             
         }, 4200);
@@ -1570,21 +1658,121 @@ async function guardarEnBot(usuarioId, nombre, premio, tipo, nivel = null) {
 }
 
 // =============================================
+// ===== TIENDA =====
+// =============================================
+
+async function cargarTienda() {
+    try {
+        const productosRef = db.collection('productos');
+        const snapshot = await productosRef.get();
+        
+        const grid = document.getElementById('tienda-grid');
+        if (!grid) return;
+        
+        // ORDENAR productos por ID (1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+        const productos = [];
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            productos.push({
+                id: doc.id,
+                nombre: data.nombre || 'Sin nombre',
+                descripcion: data.descripcion || '',
+                precio: data.precio || 0,
+                emoji: data.emoji || '🎁',
+                disponible: data.disponible !== false
+            });
+        });
+        
+        // Ordenar por ID numérico
+        productos.sort((a, b) => parseInt(a.id) - parseInt(b.id));
+        
+        grid.innerHTML = '';
+        let productosHTML = '';
+        
+        productos.forEach(producto => {
+            const disponible = producto.disponible;
+            
+            productosHTML += `
+                <div class="tienda-card ${!disponible ? 'sin-stock' : ''}" data-id="${producto.id}">
+                    <div class="emoji">${producto.emoji}</div>
+                    <div class="nombre">${producto.nombre}</div>
+                    <div class="descripcion">${producto.descripcion}</div>
+                    <div class="precio">${producto.precio} pts</div>
+                    <button class="btn-comprar" onclick="comprarProducto('${producto.id}', ${producto.precio})" ${!disponible ? 'disabled' : ''}>
+                        ${disponible ? '💗 Comprar' : '❌ Agotado'}
+                    </button>
+                </div>
+            `;
+        });
+        
+        grid.innerHTML = productosHTML;
+        
+    } catch (error) {
+        console.error('❌ Error al cargar tienda:', error);
+    }
+}
+
+async function comprarProducto(productoId, precio) {
+    if (!TELEGRAM_ID) {
+        mostrarToast('❌ Primero vincula tu Telegram 💗');
+        return;
+    }
+    
+    const puntos = usuarioData.puntos || 0;
+    
+    if (puntos < precio) {
+        mostrarToast(`❌ Te faltan ${precio - puntos} puntos 💗`);
+        return;
+    }
+    
+    try {
+        const docRef = db.collection('productos').doc(String(productoId));
+        const doc = await docRef.get();
+        if (!doc.exists) {
+            mostrarToast('❌ Producto no encontrado');
+            return;
+        }
+        const producto = doc.data();
+        
+        // Restar puntos
+        const nuevosPuntos = puntos - precio;
+        await guardarDatosUsuario({ puntos: nuevosPuntos });
+        
+        // Guardar compra en el historial
+        const compras = usuarioData.compras || [];
+        compras.push({
+            producto: producto.nombre || 'Producto',
+            precio: precio,
+            fecha: new Date().toISOString()
+        });
+        await guardarDatosUsuario({ compras: compras });
+        
+        actualizarHUD();
+        mostrarToast(`✅ ¡Compraste ${producto.nombre}! 💗`);
+        
+        guardarEnBot(TELEGRAM_ID, 'Bebita', `Compró: ${producto.nombre} por ${precio} pts`, 'compra');
+        
+        cargarTienda();
+        
+    } catch (error) {
+        console.error('❌ Error al comprar:', error);
+        mostrarToast('❌ Error al procesar la compra');
+    }
+}
+
+// =============================================
 // ===== INICIALIZACIÓN =====
 // =============================================
 
 async function init() {
-    // Obtener ID guardado
     let idGuardado = obtenerTelegramIdGuardado();
     
     if (idGuardado) {
         TELEGRAM_ID = idGuardado;
         console.log('📱 ID cargado desde localStorage:', TELEGRAM_ID);
     } else {
-        // Pedir ID
         const id = pedirTelegramId();
         if (!id) {
-            // Mostrar mensaje de error
             document.body.innerHTML = `
                 <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center;padding:2rem;background:#1e1035;color:#fcf7ff;flex-direction:column;gap:1.5rem;font-family:'Quicksand',sans-serif;">
                     <h1 style="font-size:3rem;">💗</h1>
@@ -1597,27 +1785,20 @@ async function init() {
         }
     }
     
-    // Cargar datos desde Firebase
     await cargarDatosUsuario();
     datosCargados = true;
     
-    // Actualizar HUD
     actualizarHUD();
     renderizarMapa();
-    
-    // Verificar racha
     await verificarRacha();
+    
+    // Cargar tienda
+    await cargarTienda();
     
     console.log('✅ Todo listo para:', TELEGRAM_ID);
 }
 
-// =============================================
-// ===== EVENTOS =====
-// =============================================
-
 document.addEventListener('DOMContentLoaded', init);
-
-// Botón para cambiar de usuario
 document.getElementById('cambiar-usuario').addEventListener('click', cambiarUsuario);
 
 // =============================================
