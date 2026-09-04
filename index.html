@@ -1374,6 +1374,9 @@ async function ganarPuntos(pts, xpGanado, logroId) {
         return;
     }
     
+    // Primero cargar datos frescos de Firebase para no perder nada
+    await cargarDatosUsuario();
+    
     if (logroId) {
         const hoy = new Date().toISOString().split('T')[0];
         
@@ -1474,8 +1477,14 @@ document.getElementById('celebracion-cerrar').addEventListener('click', function
 async function verificarRacha() {
     const hoy = new Date().toISOString().split('T')[0];
     const ultimaVisita = localStorage.getItem('amor_ultima_visita');
+    
     if (ultimaVisita !== hoy) {
         localStorage.setItem('amor_ultima_visita', hoy);
+        
+        // Recargar datos de Firebase para tener los puntos actualizados
+        await cargarDatosUsuario();
+        
+        // Verificar si ya tiene el logro de hoy en Firebase
         if (!usuarioData.logros || usuarioData.logros['racha-' + hoy] !== hoy) {
             await ganarPuntos(5, 10, 'racha-' + hoy);
         }
