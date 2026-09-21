@@ -2535,24 +2535,24 @@ if (botonAmor) {
 // =============================================
 
 (function() {
-    // Verificar si hoy es 21 de septiembre
-    const hoy = new Date();
-    const esPrimavera = (hoy.getMonth() === 8 && hoy.getDate() === 21); // mes 8 = septiembre (0-indexado)
+    // 🔧 Para forzar la sección sin tocar código:
+    //   - Agregá ?primavera a la URL:  pagina.html?primavera
+    //   - O poné FORZAR_PRIMAVERA = true acá abajo.
+    const FORZAR_PRIMAVERA = false;
 
-    // DEBUG: Si querés probarlo ahora descomentá esta línea:
- const esPrimavera = true;
+    const hoy = new Date();
+    const esFechaPrimavera = (hoy.getMonth() === 8 && hoy.getDate() === 21); // 8 = septiembre
+    const esPrimavera = FORZAR_PRIMAVERA
+        || esFechaPrimavera
+        || new URLSearchParams(location.search).has('primavera');
 
     const seccionPrimavera = document.getElementById('primavera-section');
     if (!seccionPrimavera) return;
+    if (!esPrimavera) return;
 
-    if (!esPrimavera) {
-        return;
-    }
-
-    // Mostrar la sección
     seccionPrimavera.classList.add('activa');
 
-    // Guardar en localStorage si ya vio la sorpresa hoy
+    // Guardar en localStorage si ya vio la sorpresa este año
     const yaVioLaSorpresa = localStorage.getItem('primavera_visto_' + hoy.getFullYear());
     if (!yaVioLaSorpresa) {
         localStorage.setItem('primavera_visto_' + hoy.getFullYear(), 'true');
@@ -2562,7 +2562,7 @@ if (botonAmor) {
     }
 
     // ---- CONTADOR DE FLORES ----
-    let contadorFlores = parseInt(localStorage.getItem('primavera_contador_flores') || '0');
+    let contadorFlores = parseInt(localStorage.getItem('primavera_contador_flores') || '0', 10);
     const contadorEl = document.getElementById('contador-flores');
     if (contadorEl) contadorEl.textContent = contadorFlores;
 
